@@ -2,7 +2,8 @@ const express = require('express');
 const path = require('path');
 const app = express();
 const hbs = require('express-handlebars');
-
+const multer = require('multer');
+const upload = multer({ dest: './public/data/uploads/' });
 app.engine(
 	'hbs',
 	hbs({
@@ -23,6 +24,19 @@ app.get(['/', '/home'], (req, res) => {
 
 app.get('/about', (req, res) => {
 	res.render('about.hbs', { layout: 'dark' });
+});
+app.post('/contact/send-message', upload.single('file'), (req, res) => {
+	const { author, sender, title, message } = req.body;
+
+	if (author && sender && title && message && req.file) {
+		const fileName = req.file.originalname;
+		res.render('contact', {
+			isSent: true,
+			fileName: fileName,
+		});
+	} else {
+		res.render('contact', { isError: true });
+	}
 });
 
 app.get('/hello/:name', (req, res) => {
@@ -45,16 +59,9 @@ app.get('/user/', (req, res) => {
 	res.render('403');
 });
 
-app.post('/contact/send-message', (req, res) => {
-	const { author, sender, title, message } = req.body;
-
-	if (author && sender && title && message) {
-		res.render('contact', { isSent: true });
-	} else {
-		res.render('contact', { isError: true });
-	}
+app.get('/contact', (req, res) => {
+	res.render('contact');
 });
-
 app.use((req, res) => {
 	res.status(404).render('404');
 });
